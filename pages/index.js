@@ -1,38 +1,7 @@
 import { Box, Button, Text, TextField, Image } from "@skynexui/components";
-import { urlObjectKeys } from "next/dist/shared/lib/utils";
+import React from "react";
+import { useRouter } from "next/router";
 import appConfig from "../config.json";
-import image from "../wanted.png";
-
-function GlobalStyle() {
-  return (
-    <style global jsx>{`
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        list-style: none;
-      }
-      body {
-        font-family: "Open Sans", sans-serif;
-      }
-      /* App fit Height */
-      html,
-      body,
-      #__next {
-        min-height: 100vh;
-        display: flex;
-        flex: 1;
-      }
-      #__next {
-        flex: 1;
-      }
-      #__next > * {
-        flex: 1;
-      }
-      /* ./App fit Height */
-    `}</style>
-  );
-}
 
 function Title(props) {
   const Tag = props.tag || "h1";
@@ -62,11 +31,11 @@ function Title(props) {
 //export default HomePage;
 
 export default function PaginaInicial() {
-  const username = "peas";
+  const [username, setUsername] = React.useState("");
+  const roteamento = useRouter();
 
   return (
     <>
-      <GlobalStyle />
       <Box
         styleSheet={{
           display: "flex",
@@ -101,6 +70,10 @@ export default function PaginaInicial() {
           {/* Formulário */}
           <Box
             as="form"
+            onSubmit={function (event) {
+              event.preventDefault();
+              roteamento.push("/chat");
+            }}
             styleSheet={{
               display: "flex",
               flexDirection: "column",
@@ -123,7 +96,14 @@ export default function PaginaInicial() {
             </Text>
 
             <TextField
+              value={username}
+              onChange={function (event) {
+                const valor = event.target.value;
+                setUsername(valor);
+              }}
               fullWidth
+              required
+              placeHolder={"Informe seu nome de usuário"}
               textFieldColors={{
                 neutral: {
                   textColor: appConfig.theme.colors.neutrals[200],
@@ -156,7 +136,6 @@ export default function PaginaInicial() {
               alignItems: "center",
               maxWidth: "200px",
               padding: "16px",
-              // backgroundColor: appConfig.theme.colors.neutrals[800],
               backgroundColor: appConfig.theme.colors.primary[500],
               backgroundImage: "url(https://i.imgur.com/3ZJ2GHf.png)",
               border: "1px solid",
@@ -171,15 +150,18 @@ export default function PaginaInicial() {
           >
             <Image
               styleSheet={{
-                // borderRadius: "50%",
                 marginBottom: "16px",
                 width: "166px",
                 height: "130px",
                 position: "absolute",
-                top: "58px",
+                top: "59px",
                 left: "18px",
               }}
-              src={`https://github.com/${username}.png`}
+              src={
+                username.length > 2
+                  ? `https://github.com/${username}.png`
+                  : `https://t4.ftcdn.net/jpg/00/64/67/63/360_F_64676383_LdbmhiNM6Ypzb3FM4PPuFP9rHe7ri8Ju.jpg`
+              }
             />
             <Text
               variant="body4"
@@ -192,7 +174,7 @@ export default function PaginaInicial() {
                 top: "212px",
               }}
             >
-              {username}
+              {username.length > 2 ? username : ""}
             </Text>
           </Box>
           {/* Photo Area */}
