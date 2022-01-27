@@ -17,6 +17,7 @@ function GlobalStyle() {
         min-height: 100vh;
         display: flex;
         flex: 1;
+        overflow: hidden;
       }
       #__next {
         flex: 1;
