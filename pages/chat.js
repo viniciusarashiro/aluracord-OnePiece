@@ -2,6 +2,8 @@ import { Box, Text, TextField, Image, Button } from "@skynexui/components";
 import React from "react";
 import appConfig from "../config.json";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { useRouter } from "next/router";
+import { ButtonSendSticker } from "../src/components/ButtonSendSticker";
 
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzUwODA2MywiZXhwIjoxOTU5MDg0MDYzfQ.8R8mbTfTNU9kwxrCnwb5cSS4FXSNvR5_daOGacsEFdI";
@@ -10,7 +12,18 @@ const SUPABASE_URL = "https://tnpvfkhygguihxrwwveh.supabase.co";
 
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+function escutaMensagensEmTempoReal(adicionaMensagem) {
+  return supabaseClient
+    .from("mensagens")
+    .on("INSERT", (respostaLive) => {
+      adicionaMensagem(respostaLive.new);
+    })
+    .subscribe();
+}
+
 export default function ChatPage() {
+  const roteamento = useRouter();
+  const usuarioLogado = roteamento.query.username;
   const [mensagem, setMensagem] = React.useState("");
   const [listaDeMensagem, setListaDeMensagem] = React.useState([]);
 
@@ -22,21 +35,24 @@ export default function ChatPage() {
       .then(({ data }) => {
         setListaDeMensagem(data);
       });
+
+    escutaMensagensEmTempoReal((novaMensagem) => {
+      setListaDeMensagem((valorAtualDaLista) => {
+        return [novaMensagem, ...valorAtualDaLista];
+      });
+    });
   }, []);
 
   function handleNovaMensagem(novaMensagem) {
     const mensagem = {
-      //id: listaDeMensagem.length + 1,
-      de: "viniciusarashiro",
+      de: usuarioLogado,
       texto: novaMensagem,
     };
 
     supabaseClient
       .from("mensagens")
       .insert([mensagem])
-      .then(({ data }) => {
-        setListaDeMensagem([data[0], ...listaDeMensagem]);
-      });
+      .then(({ data }) => {});
     setMensagem("");
   }
 
@@ -47,7 +63,8 @@ export default function ChatPage() {
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: appConfig.theme.colors.primary[500],
-        backgroundImage: `url(https://virtualbackgrounds.site/wp-content/uploads/2020/08/the-matrix-digital-rain.jpg)`,
+        backgroundImage:
+          "url(https://c4.wallpaperflare.com/wallpaper/786/286/394/one-piece-strawhat-pirates-anime-sky-wallpaper-thumb.jpg)",
         backgroundRepeat: "no-repeat",
         backgroundSize: "cover",
         backgroundBlendMode: "multiply",
@@ -116,6 +133,11 @@ export default function ChatPage() {
                 color: appConfig.theme.colors.neutrals[200],
               }}
             />
+            <ButtonSendSticker
+              onStickerClick={(sticker) => {
+                handleNovaMensagem(":sticker: " + sticker);
+              }}
+            />
           </Box>
         </Box>
       </Box>
@@ -154,7 +176,6 @@ function MessageList(props) {
       styleSheet={{
         overflow: "auto",
         display: "flex",
-        // overflowY: scroll,
         flexDirection: "column-reverse",
         flex: 1,
         color: appConfig.theme.colors.neutrals["000"],
@@ -202,7 +223,11 @@ function MessageList(props) {
                 {new Date().toLocaleDateString()}
               </Text>
             </Box>
-            {mensagem.texto}
+            {mensagem.texto.startsWith(":sticker:") ? (
+              <Image src={mensagem.texto.replace(":sticker:", "")} />
+            ) : (
+              mensagem.texto
+            )}
           </Text>
         );
       })}
